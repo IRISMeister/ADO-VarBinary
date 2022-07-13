@@ -35,9 +35,9 @@ namespace ConsoleApp
             IRISConnect.Open();
 
             String sqlStatement = "DROP TABLE TestTable";
-            String sqlStatement2 = "CREATE TABLE TestTable (ts TIMESTAMP, binaryA1 LONGVARBINARY, binaryB1 LONGVARBINARY, binaryA2 VARCHAR(200), binaryB2 VARCHAR(200))";
+            String sqlStatement2 = "CREATE TABLE TestTable (ts TIMESTAMP, binaryA1 LONGVARBINARY, binaryB1 LONGVARBINARY, binaryA2 VARBINARY(262144), binaryB2 VARBINARY(262144))";
             String sqlStatement1 = "CREATE INDEX idx1 ON TABLE TestTable (ts)";
-            String sqlStatement3 = "select ts,binaryA1,binaryB1,binaryA2,binaryB2 from TestTable"; /// where ts<'07/11/2022 17:59:46' and ts>='07/11/2022 17:59:45' ";
+            String sqlStatement3 = "select top 1 ts,binaryA1,binaryB1,binaryA2,binaryB2 from TestTable";
 
             IRISCommand cmd = new IRISCommand(sqlStatement, IRISConnect);
             IRISCommand cmd2 = new IRISCommand(sqlStatement2, IRISConnect);
@@ -77,8 +77,6 @@ namespace ConsoleApp
             var binaryA1 = ((byte[])reader.GetValue(1));
             var binaryB1 = ((byte[])reader.GetValue(2));
             Console.WriteLine(BitConverter.ToString(binaryA1) + BitConverter.ToString(binaryB1));
-
-
 
             Console.WriteLine("IRIS Server Version:" + IRISConnect.ServerVersion);
             reader.Close();
