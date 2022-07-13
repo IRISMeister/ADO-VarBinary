@@ -15,8 +15,6 @@ namespace ConsoleApp
         private void AccessIRIS(double[] data, int seq)
         {
 
-            String tablename = "";
-
             IRISConnection IRISConnect = null;
             IRISCommand cmdInsert = null;
             DateTime dt = new DateTime(2022, 1, 1, 0, 0, 0); //2022-01-01 00:00:00
@@ -28,33 +26,29 @@ namespace ConsoleApp
                 IRISConnect.ConnectionString = connstr;
                 IRISConnect.Open();
 
-                String irisjobid=IRISConnect.IRISJobID;
-                var sqlInsert = new StringBuilder();
-                tablename = "TestTable4"; sqlInsert.AppendLine($"INSERT INTO {tablename} VALUES (?,?,?,?,?)");
+                String sqlInsert="INSERT INTO TestTable VALUES (?,?,?,?,?)";
 
-
-
-                cmdInsert = new IRISCommand(sqlInsert.ToString(), IRISConnect);
+                cmdInsert = new IRISCommand(sqlInsert, IRISConnect);
                 cmdInsert.Prepare();
                 var sw = new Stopwatch();
 
-                var resp = new byte[ARRAYSIZE];
-                var hr = new byte[ARRAYSIZE];
+                var binaryA1 = new byte[ARRAYSIZE];
+                var binaryB1 = new byte[ARRAYSIZE];
 
                 for (int i = 0; i < ARRAYSIZE; i++)
                 {
-                    resp[i] = 0x10;
-                    hr[i] = 0x20;
+                    binaryA1[i] = 0x10;
+                    binaryB1[i] = 0x20;
                 }
-                // var hr = new byte[] { 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20 };
+                // var binaryB1 = new byte[] { 0x20, 0x20, 0x20, 0x20, 0x20, 0x20, 0x20 };
 
                 cmdInsert.Parameters.Clear();
                 dt = dt.AddSeconds(seq/10);  // 10 records/sec
                 cmdInsert.Parameters.Add("@ts", System.Data.SqlDbType.DateTime).Value = dt.ToString("yyyy/MM/dd HH:mm:ss");
-                cmdInsert.Parameters.Add("@resp", System.Data.SqlDbType.VarBinary).Value = resp;
-                cmdInsert.Parameters.Add("@hr", System.Data.SqlDbType.VarBinary).Value = hr;
-                cmdInsert.Parameters.Add("@resp2", System.Data.SqlDbType.VarChar).Value = "AAA";  //resp.ToString();
-                cmdInsert.Parameters.Add("@hr2", System.Data.SqlDbType.VarChar).Value = hr.ToString();
+                cmdInsert.Parameters.Add("@binaryA1", System.Data.SqlDbType.VarBinary).Value = binaryA1;
+                cmdInsert.Parameters.Add("@binaryB1", System.Data.SqlDbType.VarBinary).Value = binaryB1;
+                cmdInsert.Parameters.Add("@binaryA2", System.Data.SqlDbType.VarChar).Value = "AAA";  //binaryA1.ToString();
+                cmdInsert.Parameters.Add("@binaryB2", System.Data.SqlDbType.VarChar).Value = binaryB1.ToString();
                 cmdInsert.ExecuteNonQuery();
 
 

@@ -34,10 +34,10 @@ namespace ConsoleApp
 
             IRISConnect.Open();
 
-            String sqlStatement = "DROP TABLE TestTable4";
-            String sqlStatement2 = "CREATE TABLE TestTable4 (ts TIMESTAMP, resp LONGVARBINARY, hr LONGVARBINARY, resp2 VARCHAR(200), hr2 VARCHAR(200))";
-            String sqlStatement1 = "CREATE INDEX idx1 ON TABLE TestTable4 (ts)";
-            String sqlStatement3 = "select ts,resp,hr,resp2,hr2 from TestTable4"; /// where ts<'07/11/2022 17:59:46' and ts>='07/11/2022 17:59:45' ";
+            String sqlStatement = "DROP TABLE TestTable";
+            String sqlStatement2 = "CREATE TABLE TestTable (ts TIMESTAMP, binaryA1 LONGVARBINARY, binaryB1 LONGVARBINARY, binaryA2 VARCHAR(200), binaryB2 VARCHAR(200))";
+            String sqlStatement1 = "CREATE INDEX idx1 ON TABLE TestTable (ts)";
+            String sqlStatement3 = "select ts,binaryA1,binaryB1,binaryA2,binaryB2 from TestTable"; /// where ts<'07/11/2022 17:59:46' and ts>='07/11/2022 17:59:45' ";
 
             IRISCommand cmd = new IRISCommand(sqlStatement, IRISConnect);
             IRISCommand cmd2 = new IRISCommand(sqlStatement2, IRISConnect);
@@ -74,9 +74,9 @@ namespace ConsoleApp
             Console.WriteLine("showing the first line.");
             reader.Read();
             var timestamp = DateTime.SpecifyKind((DateTime)reader.GetValue(0), DateTimeKind.Utc);
-            var resp = ((byte[])reader.GetValue(1));
-            var hr = ((byte[])reader.GetValue(2));
-            Console.WriteLine(BitConverter.ToString(resp) + BitConverter.ToString(hr));
+            var binaryA1 = ((byte[])reader.GetValue(1));
+            var binaryB1 = ((byte[])reader.GetValue(2));
+            Console.WriteLine(BitConverter.ToString(binaryA1) + BitConverter.ToString(binaryB1));
 
 
 

@@ -35,8 +35,8 @@ namespace ConsoleApp
 
             IRISConnect.Open();
 
-            //String sqlStatement3 = "select ts,resp,hr,resp2,hr2 from TestTable4";
-            String sqlStatement3 = "select ts,resp,hr,resp2,hr2 from TestTable4 where ts<'2022-01-01 00:01:39' and ts>='2022-01-01 00:01:09'";
+            //String sqlStatement3 = "select ts,binaryA1,binaryB1,binaryA2,binaryB2 from TestTable";
+            String sqlStatement3 = "select ts,binaryA1,binaryB1,binaryA2,binaryB2 from TestTable where ts<'2022-01-01 00:01:39' and ts>='2022-01-01 00:01:09'";
 
             IRISCommand cmd3 = new IRISCommand(sqlStatement3.ToString(), IRISConnect);
             IRISDataReader reader = cmd3.ExecuteReader();
@@ -51,11 +51,11 @@ namespace ConsoleApp
             while (reader.Read())
             {
                 var timestamp = DateTime.SpecifyKind((DateTime)reader.GetValue(0), DateTimeKind.Utc);
-                var resp = ((byte[])reader.GetValue(1));
-                var hr = ((byte[])reader.GetValue(2));
-                total_size += resp.Length + hr.Length;
+                var binaryA1 = ((byte[])reader.GetValue(1));
+                var binaryB1 = ((byte[])reader.GetValue(2));
+                total_size += binaryA1.Length + binaryB1.Length;
                 cnt++;
-                // Console.WriteLine(BitConverter.ToString(resp)+ BitConverter.ToString(hr));
+                // Console.WriteLine(BitConverter.ToString(binaryA1)+ BitConverter.ToString(binaryB1));
             }
 
             sw.Stop();
