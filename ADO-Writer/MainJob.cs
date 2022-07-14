@@ -10,9 +10,10 @@ namespace ConsoleApp
     {
         private String connstr = null;
 
-        private void AccessIRIS(int arraysize, int seq)
+        private int AccessIRIS(int arraysize, int seq)
         {
 
+            int result=0;
             IRISConnection IRISConnect = null;
             IRISCommand cmdInsert = null;
             DateTime dt = new DateTime(2022, 1, 1, 0, 0, 0); //2022-01-01 00:00:00
@@ -50,6 +51,7 @@ namespace ConsoleApp
             catch (Exception e)
             {
                 Console.WriteLine(e.ToString());
+                result=1;
             }
             finally
             {
@@ -58,15 +60,11 @@ namespace ConsoleApp
                 IRISConnect.Close();
                 IRISConnect.Dispose();
             }
+            return result;
         }
-            public void ExecSync(int arraysize, int seq)
+        public int ExecSync(int arraysize, int seq)
         {
-            Task t=Task.Run(() => AccessIRIS(arraysize,seq));
-            t.Wait();
-        }
-        public void Exec(int arraysize, int seq)
-        {
-            Task.Run(() => AccessIRIS(arraysize, seq));
+            return AccessIRIS(arraysize,seq);
         }
 
         public MainJob(String connstr)

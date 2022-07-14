@@ -58,10 +58,15 @@ namespace ConsoleApp
             IRISConnect.Close();
 
             Console.WriteLine("Start writing....");
+            int result=0;
             MainJob mainJob = new MainJob(ConnectionString);
             for (int r = 0; r < loopcnt; r++)
             {
-                mainJob.ExecSync(arraysize, r);
+                result=mainJob.ExecSync(arraysize, r);
+                if (result==1) {
+                    Console.WriteLine("fatal error. Exiting.");
+                    Environment.Exit(result);
+                }
             }
 
             //wait last job to finish
