@@ -38,6 +38,7 @@ namespace ConsoleApp
             String sqlStatement2 = "CREATE TABLE TestTable (ts TIMESTAMP, binaryA1 LONGVARBINARY, binaryB1 LONGVARBINARY, binaryA2 VARBINARY("+arraysize+"), binaryB2 VARBINARY("+arraysize+"))";
             String sqlStatement1 = "CREATE INDEX idx1 ON TABLE TestTable (ts)";
             String sqlStatement3 = "select top 1 ts,binaryA1,binaryB1,binaryA2,binaryB2 from TestTable";
+            String sqlStatement4 = "TUNE TABLE TestTable";
 
             IRISCommand cmd = new IRISCommand(sqlStatement, IRISConnect);
             IRISCommand cmd2 = new IRISCommand(sqlStatement2, IRISConnect);
@@ -67,18 +68,25 @@ namespace ConsoleApp
             Console.WriteLine("");
 
             IRISConnect.Open();
-            IRISCommand cmd3 = new IRISCommand(sqlStatement3.ToString(), IRISConnect);
+            IRISCommand cmd3 = new IRISCommand(sqlStatement3, IRISConnect);
             IRISDataReader reader = cmd3.ExecuteReader();
 
             Console.WriteLine("showing the first line.");
             reader.Read();
             var binaryA1 = ((byte[])reader.GetValue(1));
             var binaryB1 = ((byte[])reader.GetValue(2));
-            Console.WriteLine(BitConverter.ToString(binaryA1).Substring(0,30)+"... "+BitConverter.ToString(binaryB1).Substring(0,30)+"...");
+
+            int str_limit=arraysize;
+            if (arraysize>30) {str_limit=30;} 
+            Console.WriteLine(BitConverter.ToString(binaryA1).Substring(0,str_limit)+"... "+BitConverter.ToString(binaryB1).Substring(0,str_limit)+"...");
 
             Console.WriteLine("arraysize:"+arraysize);
             Console.WriteLine("IRIS Server Version:" + IRISConnect.ServerVersion);
             reader.Close();
+
+            IRISCommand cmd4 = new IRISCommand(sqlStatement4, IRISConnect);
+            cmd4.ExecuteNonQuery();
+
             IRISConnect.Close();
 
             Console.WriteLine(ConnectionString);
