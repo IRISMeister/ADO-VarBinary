@@ -26,58 +26,59 @@ namespace ConsoleApp
 
             double[] data = new double[loopcnt];
 
-
             String ConnectionString = "Server = " + host
                 + "; Port = " + port + "; Namespace = " + Namespace
                 + "; Password = " + password + "; User ID = " + username + "; SharedMemory=false;pooling=true;";
             IRISConnection IRISConnect = new IRISConnection();
             IRISConnect.ConnectionString = ConnectionString;
-
-
             IRISConnect.Open();
 
-#if USELONGVARBINARY
-            Console.WriteLine("Using LONGVARBINARY.");
-            String sqlStatement3 = "select ts,binaryA1,binaryB1 from TestTable where ts<'2022-01-01 00:01:39' and ts>='2022-01-01 00:01:09'";
-#else
-            Console.WriteLine("Using VARBINARY.");
-            String sqlStatement3 = "select ts,binaryA2,binaryB2 from TestTable where ts<'2022-01-01 00:01:39' and ts>='2022-01-01 00:01:09'";
-#endif
-            IRISCommand cmd3 = new IRISCommand(sqlStatement3.ToString(), IRISConnect);
-            IRISDataReader reader = cmd3.ExecuteReader();
+            String sqlStatement1 = "select ts,binaryA1,binaryB1 from TestTable where ts<'2022-01-01 00:01:39' and ts>='2022-01-01 00:01:09'";
+            String sqlStatement2 = "select ts,binaryA2,binaryB2 from TestTable where ts<'2022-01-01 00:01:39' and ts>='2022-01-01 00:01:09'";
 
-            var sw = new Stopwatch();
+            // LONGVARBINARY
+            Console.WriteLine("LONGVARBINARY");
+            for (int i=0; i<10; i++ ) RunQuery(IRISConnect,sqlStatement1);
+
+            // VARBINARY
+            Console.WriteLine("VARBINARY");
+            for (int i=0; i<10; i++ ) RunQuery(IRISConnect,sqlStatement2);
+
+            Console.WriteLine("IRIS Server Version:" + IRISConnect.ServerVersion);
+            Console.WriteLine(ConnectionString);
+            IRISConnect.Close();
+        }
+
+        static void RunQuery(IRISConnection IRISConnect, String sql) {
+            Stopwatch sw;
             double ms;
-            sw.Reset();
-            sw.Start();
             int cnt = 0;
             int total_size = 0;
+            byte[] binaryA;
+            byte[] binaryB;
+
+            IRISCommand cmd = new IRISCommand(sql, IRISConnect);
+            IRISDataReader reader = cmd.ExecuteReader();
+
+            sw = new Stopwatch();
+            sw.Reset();
+            sw.Start();
+            cnt = 0;
+            total_size = 0;
 
             while (reader.Read())
             {
-                var timestamp = DateTime.SpecifyKind((DateTime)reader.GetValue(0), DateTimeKind.Utc);
-#if USELONGVARBINARY
-                var binaryA = ((byte[])reader.GetValue(1));
-                var binaryB = ((byte[])reader.GetValue(2));
-#else
-                var binaryA = ((byte[])reader.GetValue(1));
-                var binaryB = ((byte[])reader.GetValue(2));
-#endif
+                binaryA = ((byte[])reader.GetValue(1));
+                binaryB = ((byte[])reader.GetValue(2));
                 total_size += binaryA.Length + binaryB.Length;
                 cnt++;
-                // Console.WriteLine(BitConverter.ToString(binaryA)+ BitConverter.ToString(binaryB));
+                //Console.WriteLine(BitConverter.ToString(binaryA)+" "+BitConverter.ToString(binaryB));
             }
 
             sw.Stop();
             ms = 1000.0 * sw.ElapsedTicks / Stopwatch.Frequency;
             Console.WriteLine(sw.ElapsedTicks + " " + Stopwatch.Frequency + " " + ms+ " reccnt:"+cnt + " ms/rec:"+ms/cnt+ " total_size:"+ total_size);
 
-
-            Console.WriteLine("IRIS Server Version:" + IRISConnect.ServerVersion);
-            reader.Close();
-            IRISConnect.Close();
-
-            Console.WriteLine(ConnectionString);
         }
     }
 }

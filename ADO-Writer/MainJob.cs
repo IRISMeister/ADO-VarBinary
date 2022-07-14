@@ -8,11 +8,9 @@ namespace ConsoleApp
 {
     class MainJob
     {
-        public const int ARRAYSIZE = 1024*256;
-
         private String connstr = null;
 
-        private void AccessIRIS(double[] data, int seq)
+        private void AccessIRIS(int arraysize, int seq)
         {
 
             IRISConnection IRISConnect = null;
@@ -31,10 +29,10 @@ namespace ConsoleApp
                 cmdInsert.Prepare();
                 var sw = new Stopwatch();
 
-                var binaryA = new byte[ARRAYSIZE];
-                var binaryB = new byte[ARRAYSIZE];
+                var binaryA = new byte[arraysize];
+                var binaryB = new byte[arraysize];
 
-                for (int i = 0; i < ARRAYSIZE; i++)
+                for (int i = 0; i < arraysize; i++)
                 {
                     binaryA[i] = (byte)(i%256); //0x10;
                     binaryB[i] = (byte)(i%256);  //0x20;
@@ -61,14 +59,14 @@ namespace ConsoleApp
                 IRISConnect.Dispose();
             }
         }
-            public void ExecSync(double[] data,int seq)
+            public void ExecSync(int arraysize, int seq)
         {
-            Task t=Task.Run(() => AccessIRIS(data,seq));
+            Task t=Task.Run(() => AccessIRIS(arraysize,seq));
             t.Wait();
         }
-        public void Exec(double[] data, int seq)
+        public void Exec(int arraysize, int seq)
         {
-            Task.Run(() => AccessIRIS(data, seq));
+            Task.Run(() => AccessIRIS(arraysize, seq));
         }
 
         public MainJob(String connstr)

@@ -6,6 +6,8 @@ namespace ConsoleApp
 {
     class Program
     {
+        //public static readonly int arraysize = 1024*128;
+
         static void Main(string[] args)
         {
 
@@ -15,10 +17,11 @@ namespace ConsoleApp
             String password = "SYS";
             String Namespace = "USER";
 
-            String errstr;
+            int arraysize = 1024*128;
             int loopcnt = 1000;
+            String errstr;
 
-            if (args.Length >= 1) {}
+            if (args.Length >= 1) arraysize = Int32.Parse(args[0]);
             if (args.Length >= 2) host = args[1];
             if (args.Length >= 3) port = args[2];
             if (args.Length >= 4) loopcnt = Int32.Parse(args[3]);
@@ -35,7 +38,7 @@ namespace ConsoleApp
             IRISConnect.Open();
 
             String sqlStatement = "DROP TABLE TestTable";
-            String sqlStatement2 = "CREATE TABLE TestTable (ts TIMESTAMP, binaryA1 LONGVARBINARY, binaryB1 LONGVARBINARY, binaryA2 VARBINARY(262144), binaryB2 VARBINARY(262144))";
+            String sqlStatement2 = "CREATE TABLE TestTable (ts TIMESTAMP, binaryA1 LONGVARBINARY, binaryB1 LONGVARBINARY, binaryA2 VARBINARY("+arraysize+"), binaryB2 VARBINARY("+arraysize+"))";
             String sqlStatement1 = "CREATE INDEX idx1 ON TABLE TestTable (ts)";
             String sqlStatement3 = "select top 1 ts,binaryA1,binaryB1,binaryA2,binaryB2 from TestTable";
 
@@ -61,7 +64,7 @@ namespace ConsoleApp
             MainJob mainJob = new MainJob(ConnectionString);
             for (int r = 0; r < loopcnt; r++)
             {
-                mainJob.ExecSync(data, r);
+                mainJob.ExecSync(arraysize, r);
             }
 
             //wait last job to finish
@@ -73,11 +76,11 @@ namespace ConsoleApp
 
             Console.WriteLine("showing the first line.");
             reader.Read();
-            var timestamp = DateTime.SpecifyKind((DateTime)reader.GetValue(0), DateTimeKind.Utc);
             var binaryA1 = ((byte[])reader.GetValue(1));
             var binaryB1 = ((byte[])reader.GetValue(2));
-            Console.WriteLine(BitConverter.ToString(binaryA1) + BitConverter.ToString(binaryB1));
+            Console.WriteLine(BitConverter.ToString(binaryA1)+" "+BitConverter.ToString(binaryB1));
 
+            Console.WriteLine("arraysize:"+arraysize);
             Console.WriteLine("IRIS Server Version:" + IRISConnect.ServerVersion);
             reader.Close();
             IRISConnect.Close();
