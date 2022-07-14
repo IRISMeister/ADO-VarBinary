@@ -26,9 +26,6 @@ namespace ConsoleApp
             if (args.Length >= 3) port = args[2];
             if (args.Length >= 4) loopcnt = Int32.Parse(args[3]);
 
-            double[] data = new double[loopcnt];
-
-
             String ConnectionString = "Server = " + host
                 + "; Port = " + port + "; Namespace = " + Namespace
                 + "; Password = " + password + "; User ID = " + username + "; SharedMemory=false;pooling=true;Max Pool Size=3";
@@ -60,7 +57,6 @@ namespace ConsoleApp
             IRISConnect.Close();
 
             Console.WriteLine("Start writing....");
-            // This case makes async calls to access IRIS.
             MainJob mainJob = new MainJob(ConnectionString);
             for (int r = 0; r < loopcnt; r++)
             {
@@ -78,7 +74,7 @@ namespace ConsoleApp
             reader.Read();
             var binaryA1 = ((byte[])reader.GetValue(1));
             var binaryB1 = ((byte[])reader.GetValue(2));
-            Console.WriteLine(BitConverter.ToString(binaryA1)+" "+BitConverter.ToString(binaryB1));
+            Console.WriteLine(BitConverter.ToString(binaryA1).Substring(0,30)+"... "+BitConverter.ToString(binaryB1).Substring(0,30)+"...");
 
             Console.WriteLine("arraysize:"+arraysize);
             Console.WriteLine("IRIS Server Version:" + IRISConnect.ServerVersion);

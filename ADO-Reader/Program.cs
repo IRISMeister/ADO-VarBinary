@@ -3,6 +3,8 @@ using System;
 using InterSystems.Data.IRISClient;
 using System.Diagnostics;
 using System.Threading;
+using System.Collections.Generic;
+using MathNet.Numerics.Statistics;
 using System.Text;
 namespace ConsoleApp
 {
@@ -17,14 +19,12 @@ namespace ConsoleApp
             String password = "SYS";
             String Namespace = "USER";
 
-            int loopcnt = 5000;
 
             if (args.Length >= 1) {}
             if (args.Length >= 2) host = args[1];
             if (args.Length >= 3) port = args[2];
-            if (args.Length >= 4) loopcnt = Int32.Parse(args[3]);
 
-            double[] data = new double[loopcnt];
+            List<double> stat_data = new List<double>();
 
             String ConnectionString = "Server = " + host
                 + "; Port = " + port + "; Namespace = " + Namespace
@@ -38,18 +38,25 @@ namespace ConsoleApp
 
             // LONGVARBINARY
             Console.WriteLine("LONGVARBINARY");
-            for (int i=0; i<10; i++ ) RunQuery(IRISConnect,sqlStatement1);
+            for (int i=0; i<10; i++ ) RunQuery(stat_data,IRISConnect,sqlStatement1);
+            double[] data = stat_data.ToArray();
+
+            Console.WriteLine("Iterate#:{0},Mean:{1},Median:{2},StandardDeviation:{3},Minimum:{4},Maximum:{5}", data.Length,data.Mean(),data.Median(),data.StandardDeviation(),data.Minimum(),data.Maximum());
 
             // VARBINARY
+            stat_data.Clear();
             Console.WriteLine("VARBINARY");
-            for (int i=0; i<10; i++ ) RunQuery(IRISConnect,sqlStatement2);
+            for (int i=0; i<10; i++ ) RunQuery(stat_data,IRISConnect,sqlStatement2);
+            data = stat_data.ToArray();
+
+            Console.WriteLine("Iterate#:{0},Mean:{1},Median:{2},StandardDeviation:{3},Minimum:{4},Maximum:{5}", data.Length,data.Mean(),data.Median(),data.StandardDeviation(),data.Minimum(),data.Maximum());
 
             Console.WriteLine("IRIS Server Version:" + IRISConnect.ServerVersion);
             Console.WriteLine(ConnectionString);
             IRISConnect.Close();
         }
 
-        static void RunQuery(IRISConnection IRISConnect, String sql) {
+        static void RunQuery(List<double> stat_data,IRISConnection IRISConnect, String sql) {
             Stopwatch sw;
             double ms;
             int cnt = 0;
@@ -77,8 +84,8 @@ namespace ConsoleApp
 
             sw.Stop();
             ms = 1000.0 * sw.ElapsedTicks / Stopwatch.Frequency;
-            Console.WriteLine(sw.ElapsedTicks + " " + Stopwatch.Frequency + " " + ms+ " reccnt:"+cnt + " ms/rec:"+ms/cnt+ " total_size:"+ total_size);
-
+            stat_data.Add(ms);
+            //Console.WriteLine(sw.ElapsedTicks + " " + Stopwatch.Frequency + " " + ms+ " reccnt:"+cnt + " ms/rec:"+ms/cnt+ " total_size:"+ total_size);
         }
     }
 }
