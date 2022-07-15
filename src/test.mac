@@ -1,0 +1,22 @@
+ROUTINE test [ type = mac]
+ For i=1:1:30 {
+	 Set data(i)=^poCN.ELOp.1(i) // 256KB*2 = 524,320 bytes
+ }
+ Set BinA=$LIST(data(1),4) // allocate space
+ Set st=$ZH
+ For loop=1:1:300 {
+	 For i=1:1:30 {
+		 Set BinA=$LIST(data(i),4) // 262,144 bytes
+		 if $L(BinA)'=262144 b
+	 } 
+ }
+ w $ZH-st,!
+ 
+ Set st=$ZH
+ For loop=1:1:300 {
+	 For i=1:1:30 {
+		 Set BinA=$LIST(data(i),5) // 262,144 bytes
+		 if $L(BinA)'=262144 b
+	 }
+ }
+ w $ZH-st,!
