@@ -1,5 +1,4 @@
-﻿#define USELONGVARBINARY
-using System;
+﻿using System;
 using InterSystems.Data.IRISClient;
 using System.Diagnostics;
 using System.Threading;
@@ -19,10 +18,8 @@ namespace ConsoleApp
             String password = "SYS";
             String Namespace = "USER";
 
-
-            if (args.Length >= 1) {}
-            if (args.Length >= 2) host = args[1];
-            if (args.Length >= 3) port = args[2];
+            if (args.Length >= 1) host = args[0];
+            if (args.Length >= 2) port = args[1];
 
             List<double> stat_data = new List<double>();
 
@@ -33,27 +30,27 @@ namespace ConsoleApp
             IRISConnect.ConnectionString = ConnectionString;
             IRISConnect.Open();
 
-            String sqlStatement1 = "select ts,binaryA1,binaryB1 from TestTable where ts<'2022-01-01 00:01:39' and ts>='2022-01-01 00:01:09'";
-            String sqlStatement2 = "select ts,binaryA2,binaryB2 from TestTable where ts<'2022-01-01 00:01:39' and ts>='2022-01-01 00:01:09'";
+            String fromStatement = "from TestTable where ts<'2022-01-01 00:01:39' and ts>='2022-01-01 00:01:09'";
+            String sqlStatement1 = "select ts,binaryA1,binaryB1 " + fromStatement;
+            String sqlStatement2 = "select ts,binaryA2,binaryB2 " + fromStatement;
 
-            // LONGVARBINARY
             Console.WriteLine("LONGVARBINARY");
-            for (int i=0; i<10; i++ ) RunQuery(stat_data,IRISConnect,sqlStatement1);
-            double[] data = stat_data.ToArray();
-
-            Console.WriteLine("Iterate#:{0},Mean:{1},Median:{2},StandardDeviation:{3},Minimum:{4},Maximum:{5}", data.Length,data.Mean(),data.Median(),data.StandardDeviation(),data.Minimum(),data.Maximum());
-
-            // VARBINARY
             stat_data.Clear();
-            Console.WriteLine("VARBINARY");
-            for (int i=0; i<10; i++ ) RunQuery(stat_data,IRISConnect,sqlStatement2);
-            data = stat_data.ToArray();
+            for (int i=0; i<10; i++ ) RunQuery(stat_data,IRISConnect,sqlStatement1);
+            ShowStats(stat_data);
 
-            Console.WriteLine("Iterate#:{0},Mean:{1},Median:{2},StandardDeviation:{3},Minimum:{4},Maximum:{5}", data.Length,data.Mean(),data.Median(),data.StandardDeviation(),data.Minimum(),data.Maximum());
+            Console.WriteLine("VARBINARY");
+            stat_data.Clear();
+            for (int i=0; i<10; i++ ) RunQuery(stat_data,IRISConnect,sqlStatement2);
+            ShowStats(stat_data);
 
             Console.WriteLine("IRIS Server Version:" + IRISConnect.ServerVersion);
             Console.WriteLine(ConnectionString);
             IRISConnect.Close();
+        }
+        static void ShowStats(List<double> stat_data) {
+            double [] data = stat_data.ToArray();
+            Console.WriteLine("Iterate#:{0},Mean:{1},Median:{2},StandardDeviation:{3},Minimum:{4},Maximum:{5}", data.Length,data.Mean(),data.Median(),data.StandardDeviation(),data.Minimum(),data.Maximum());
         }
 
         static void RunQuery(List<double> stat_data,IRISConnection IRISConnect, String sql) {
@@ -79,13 +76,18 @@ namespace ConsoleApp
                 binaryB = ((byte[])reader.GetValue(2));
                 total_size += binaryA.Length + binaryB.Length;
                 cnt++;
-                //Console.WriteLine(BitConverter.ToString(binaryA)+" "+BitConverter.ToString(binaryB));
+
+                if (cnt==1) {
+                    int str_limit=binaryA.Length;
+                    if (str_limit>30) {str_limit=30;} 
+                    Console.WriteLine(BitConverter.ToString(binaryA).Substring(0,str_limit)+"... "+BitConverter.ToString(binaryB).Substring(0,str_limit)+"...");
+                }
             }
 
             sw.Stop();
             ms = 1000.0 * sw.ElapsedTicks / Stopwatch.Frequency;
             stat_data.Add(ms);
-            //Console.WriteLine(sw.ElapsedTicks + " " + Stopwatch.Frequency + " " + ms+ " reccnt:"+cnt + " ms/rec:"+ms/cnt+ " total_size:"+ total_size);
+            Console.WriteLine(sw.ElapsedTicks + " " + Stopwatch.Frequency + " " + ms+ " reccnt:"+cnt + " ms/rec:"+ms/cnt+ " total_size:"+ total_size);
         }
     }
 }

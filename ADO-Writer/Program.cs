@@ -82,7 +82,7 @@ namespace ConsoleApp
             var binaryB1 = ((byte[])reader.GetValue(2));
 
             int str_limit=arraysize;
-            if (arraysize>30) {str_limit=30;} 
+            if (str_limit>30) {str_limit=30;} 
             Console.WriteLine(BitConverter.ToString(binaryA1).Substring(0,str_limit)+"... "+BitConverter.ToString(binaryB1).Substring(0,str_limit)+"...");
 
             Console.WriteLine("arraysize:"+arraysize);
