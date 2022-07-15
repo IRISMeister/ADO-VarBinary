@@ -2,6 +2,10 @@ version: '2'
 #
 services:
   iris:
+    build:
+      context: .
+      args:
+        COMMIT_ID: ${COMMIT_ID}
     image: containers.intersystems.com/intersystems/iris-community:2022.1.0.209.0
     hostname: iris
 

@@ -16,7 +16,7 @@ namespace ConsoleApp
             String port = "1972";
             String username = "SuperUser";
             String password = "SYS";
-            String Namespace = "USER";
+            String Namespace = "DEMO";
 
             if (args.Length >= 1) host = args[0];
             if (args.Length >= 2) port = args[1];
@@ -41,7 +41,7 @@ namespace ConsoleApp
 
             Console.WriteLine("VARBINARY");
             stat_data.Clear();
-            for (int i=0; i<10; i++ ) RunQuery(stat_data,IRISConnect,sqlStatement2);
+            for (int i=0; i<3; i++ ) RunQuery(stat_data,IRISConnect,sqlStatement2);
             ShowStats(stat_data);
 
             Console.WriteLine("IRIS Server Version:" + IRISConnect.ServerVersion);
@@ -60,10 +60,23 @@ namespace ConsoleApp
             int total_size = 0;
             byte[] binaryA;
             byte[] binaryB;
+            int str_limit=0;
+            int binary_size=0;
+            String buff=null;
 
             IRISCommand cmd = new IRISCommand(sql, IRISConnect);
-            IRISDataReader reader = cmd.ExecuteReader();
+            IRISDataReader reader;
 
+            // Read through once to keep them in global buffer (which is set to 2GB via merge.cpf )
+            reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                binaryA = ((byte[])reader.GetValue(1));
+                binaryB = ((byte[])reader.GetValue(2));
+            }
+            reader.Close();
+
+            reader = cmd.ExecuteReader();
             sw = new Stopwatch();
             sw.Reset();
             sw.Start();
@@ -78,16 +91,30 @@ namespace ConsoleApp
                 cnt++;
 
                 if (cnt==1) {
-                    int str_limit=binaryA.Length;
+
+                    binary_size=binaryA.Length;  // it's all the same.
+                    str_limit=binary_size;
                     if (str_limit>30) {str_limit=30;} 
-                    Console.WriteLine(BitConverter.ToString(binaryA).Substring(0,str_limit)+"... "+BitConverter.ToString(binaryB).Substring(0,str_limit)+"...");
+                    buff = BitConverter.ToString(binaryA).Substring(0,str_limit);
+                    if (buff != "00-01-02-03-04-05-06-07-08-09-".Substring(0,str_limit)) {
+                        Console.WriteLine($" !!! binaryA ({buff}) is not what we expected !!!");
+                    }
+                    buff = BitConverter.ToString(binaryB).Substring(0,str_limit);
+                    if (buff != "00-01-02-03-04-05-06-07-08-09-".Substring(0,str_limit)) {
+                        Console.WriteLine($" !!! binaryB ({buff}) is not what we expected !!!");
+                    }
+                    //Console.WriteLine(BitConverter.ToString(binaryA).Substring(0,str_limit)+"... "+BitConverter.ToString(binaryB).Substring(0,str_limit)+"...");
                 }
             }
 
             sw.Stop();
             ms = 1000.0 * sw.ElapsedTicks / Stopwatch.Frequency;
             stat_data.Add(ms);
-            Console.WriteLine(sw.ElapsedTicks + " " + Stopwatch.Frequency + " " + ms+ " reccnt:"+cnt + " ms/rec:"+ms/cnt+ " total_size:"+ total_size);
+            //Console.WriteLine(ms+ " reccnt:"+cnt + " ms/rec:"+ms/cnt+ " total_size:"+ total_size);
+            if (total_size != binary_size*cnt*2 ) { 
+                Console.WriteLine($" !!! total_size of binary fileds ({total_size}) is not what we expected ({binary_size*cnt*2}) !!!");
+            }
+
         }
     }
 }

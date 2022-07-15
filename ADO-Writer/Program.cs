@@ -1,4 +1,5 @@
-﻿using System;
+﻿#define CREATETABLE
+using System;
 using InterSystems.Data.IRISClient;
 using System.Threading;
 using System.Text;
@@ -15,7 +16,7 @@ namespace ConsoleApp
             String port = "1972";
             String username = "SuperUser";
             String password = "SYS";
-            String Namespace = "USER";
+            String Namespace = "DEMO";
 
             int arraysize = 1024*128;
             int loopcnt = 1000;
@@ -32,31 +33,32 @@ namespace ConsoleApp
             IRISConnection IRISConnect = new IRISConnection();
             IRISConnect.ConnectionString = ConnectionString;
 
-            IRISConnect.Open();
-
             String sqlStatement = "DROP TABLE TestTable";
-            String sqlStatement2 = "CREATE TABLE TestTable (ts TIMESTAMP, binaryA1 LONGVARBINARY, binaryB1 LONGVARBINARY, binaryA2 VARBINARY("+arraysize+"), binaryB2 VARBINARY("+arraysize+"))";
-            String sqlStatement1 = "CREATE INDEX idx1 ON TABLE TestTable (ts)";
+            String sqlStatement1 = "CREATE TABLE TestTable (ts TIMESTAMP, binaryA1 LONGVARBINARY, binaryB1 LONGVARBINARY, binaryA2 VARBINARY("+arraysize+"), binaryB2 VARBINARY("+arraysize+"))";
+            String sqlStatement2 = "CREATE INDEX idx1 ON TABLE TestTable (ts)";
             String sqlStatement3 = "select top 1 ts,binaryA1,binaryB1,binaryA2,binaryB2 from TestTable";
             String sqlStatement4 = "TUNE TABLE TestTable";
+            String sqlStatement5 = "SELECT \"global\",allocatedMB,usedMB FROM bdb_sql.TableSize('TestTable')";
 
-            IRISCommand cmd = new IRISCommand(sqlStatement, IRISConnect);
-            IRISCommand cmd2 = new IRISCommand(sqlStatement2, IRISConnect);
+            IRISCommand cmd;
+            IRISCommand cmd1;
+#if CREATETABLE
+            IRISConnect.Open();
+            cmd = new IRISCommand(sqlStatement, IRISConnect);
+            cmd1 = new IRISCommand(sqlStatement1, IRISConnect);
 
             try
             {
                 cmd.ExecuteNonQuery();
             }
             catch (Exception e) { errstr = e.ToString(); }
-            cmd2.ExecuteNonQuery();
+            cmd1.ExecuteNonQuery();
 
-            cmd2 = new IRISCommand(sqlStatement1, IRISConnect);
-            cmd2.ExecuteNonQuery();
-
+            cmd = new IRISCommand(sqlStatement2, IRISConnect);
+            cmd.ExecuteNonQuery();
             cmd.Dispose();
-            cmd2.Dispose();
             IRISConnect.Close();
-
+#endif
             Console.WriteLine("Start writing....");
             int result=0;
             MainJob mainJob = new MainJob(ConnectionString);
@@ -69,25 +71,40 @@ namespace ConsoleApp
                 }
             }
 
-            //wait last job to finish
             Console.WriteLine("");
 
+            IRISDataReader reader;
             IRISConnect.Open();
-            IRISCommand cmd3 = new IRISCommand(sqlStatement3, IRISConnect);
-            IRISDataReader reader = cmd3.ExecuteReader();
+            cmd = new IRISCommand(sqlStatement3, IRISConnect);
+            reader = cmd.ExecuteReader();
 
             Console.WriteLine("showing the first line.");
             reader.Read();
             var binaryA1 = ((byte[])reader.GetValue(1));
             var binaryB1 = ((byte[])reader.GetValue(2));
+            reader.Close();
 
             int str_limit=arraysize;
             if (str_limit>30) {str_limit=30;} 
             Console.WriteLine(BitConverter.ToString(binaryA1).Substring(0,str_limit)+"... "+BitConverter.ToString(binaryB1).Substring(0,str_limit)+"...");
 
             Console.WriteLine("arraysize:"+arraysize);
-            Console.WriteLine("IRIS Server Version:" + IRISConnect.ServerVersion);
+            Console.WriteLine("");
+
+            cmd = new IRISCommand(sqlStatement5, IRISConnect);
+            reader = cmd.ExecuteReader();
+
+            // show global size
+            while (reader.Read())
+            {
+                var global=reader.GetValue(0);
+                var allocatedMB=reader.GetValue(1);
+                var usedMB=reader.GetValue(2);
+                Console.WriteLine($"global:{global} allocatedMB:{allocatedMB} usedMB:{usedMB}");
+            }
             reader.Close();
+            Console.WriteLine("");
+            Console.WriteLine("IRIS Server Version:" + IRISConnect.ServerVersion);
 
             IRISCommand cmd4 = new IRISCommand(sqlStatement4, IRISConnect);
             cmd4.ExecuteNonQuery();
