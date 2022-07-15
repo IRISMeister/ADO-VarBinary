@@ -1,5 +1,3 @@
-version: '2'
-#
 services:
   iris:
     build:
@@ -25,8 +23,6 @@ services:
     - TZ=JST-9
     - ISC_CPF_MERGE_FILE=/ISC/cpf/merge.cpf
 
-    mem_limit: 1G
-
   dotnet:
     build:
       context: dotnet50
@@ -38,5 +34,3 @@ services:
       - TZ=JST-9      
     volumes:
       - ./:/source
-      
-    mem_limit: 1G

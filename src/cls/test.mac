@@ -1,22 +1,31 @@
-ROUTINE test [ type = mac]
- For i=1:1:30 {
-	 Set data(i)=^poCN.ELOp.1(i) // 256KB*2 = 524,320 bytes
+ROUTINE test
+ #; load a record into local variables
+ Set data=^poCN.ELOp.1(1) // 256KB*2 = 524,320 bytes
+
+ Set BinA=$LIST(data,4) // allocate space
+
+#define SAMPLECOUNT 1000
+
+ #; picking up a 4th element 300 times.
+ Set elapsed=0
+ For s=1:1:$$$SAMPLECOUNT {  
+	Set st=$ZH
+	For i=1:1:300 {
+		Set BinA=$LIST(data,4) // 262,144 bytes
+		if $L(BinA)'=262144 { write "size miss match.",! b}
+	} 
+ 	Set elapsed=elapsed+($ZH-st)
  }
- Set BinA=$LIST(data(1),4) // allocate space
- Set st=$ZH
- For loop=1:1:300 {
-	 For i=1:1:30 {
-		 Set BinA=$LIST(data(i),4) // 262,144 bytes
-		 if $L(BinA)'=262144 b
-	 } 
- }
- w $ZH-st,!
+ w elapsed/$$$SAMPLECOUNT,!
  
- Set st=$ZH
- For loop=1:1:300 {
-	 For i=1:1:30 {
-		 Set BinA=$LIST(data(i),5) // 262,144 bytes
-		 if $L(BinA)'=262144 b
-	 }
+ #; picking up a 5th element 300 times.
+ Set elapsed=0
+ For s=1:1:$$$SAMPLECOUNT {  
+	Set st=$ZH
+	For i=1:1:300 {
+		Set BinA=$LIST(data,5) // 262,144 bytes
+		if $L(BinA)'=262144 { write "size miss match.",! b}
+	} 
+ 	Set elapsed=elapsed+($ZH-st)
  }
- w $ZH-st,!
+ w elapsed/$$$SAMPLECOUNT,!
