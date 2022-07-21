@@ -34,3 +34,16 @@ services:
       - TZ=JST-9      
     volumes:
       - ./:/source
+
+  postgres:
+    image: postgres:14.4-alpine
+    hostname: postgres
+    ports: 
+    - "5432:5432"
+    environment:
+    - TZ=JST-9
+    - POSTGRES_PASSWORD=postgres
+    - POSTGRES_USER=postgres
+    - PGPASSWORD=postgres
+    - POSTGRES_DB=demo
+    - DATABASE_HOST=localhost

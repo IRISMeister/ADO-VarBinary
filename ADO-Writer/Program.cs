@@ -1,6 +1,8 @@
-﻿#define CREATETABLE
+﻿#define IRIS
+#define CREATETABLE
 using System;
 using InterSystems.Data.IRISClient;
+using Npgsql;
 using System.Threading;
 using System.Text;
 namespace ConsoleApp
@@ -27,26 +29,43 @@ namespace ConsoleApp
             if (args.Length >= 3) port = args[2];
             if (args.Length >= 4) loopcnt = Int32.Parse(args[3]);
 
-            String ConnectionString = "Server = " + host
-                + "; Port = " + port + "; Namespace = " + Namespace
-                + "; Password = " + password + "; User ID = " + username + "; SharedMemory=false;pooling=true;Max Pool Size=3";
-            IRISConnection IRISConnect = new IRISConnection();
-            IRISConnect.ConnectionString = ConnectionString;
-
             String sqlStatement = "DROP TABLE TestTable";
+#if IRIS
             String sqlStatement1 = "CREATE TABLE TestTable (ts TIMESTAMP, binaryA1 LONGVARBINARY, binaryB1 LONGVARBINARY, binaryA2 VARBINARY("+arraysize+"), binaryB2 VARBINARY("+arraysize+"))";
             String sqlStatement2 = "CREATE INDEX idx1 ON TABLE TestTable (ts)";
             String sqlStatement3 = "select top 1 ts,binaryA1,binaryB1,binaryA2,binaryB2 from TestTable";
+#else
+            String sqlStatement1 = "CREATE TABLE TestTable (ts TIMESTAMP, binaryA1 bytea, binaryB1 bytea, binaryA2 bytea, binaryB2 bytea)";
+            String sqlStatement2 = "CREATE INDEX idx1 ON TestTable (ts)";
+            String sqlStatement3 = "select ts,binaryA1,binaryB1,binaryA2,binaryB2 from TestTable";
+#endif
             String sqlStatement4 = "TUNE TABLE TestTable";
             String sqlStatement5 = "SELECT \"global\",allocatedMB,usedMB FROM bdb_sql.TableSize('TestTable')";
 
+#if IRIS
+            String ConnectionString = "Server = " + host
+                + "; Port = " + port + "; Namespace = " + Namespace
+                + "; Password = " + password + "; User ID = " + username + "; SharedMemory=false;pooling=true;Max Pool Size=3";
+            IRISConnection con = new IRISConnection();
             IRISCommand cmd;
             IRISCommand cmd1;
-#if CREATETABLE
-            IRISConnect.Open();
-            cmd = new IRISCommand(sqlStatement, IRISConnect);
-            cmd1 = new IRISCommand(sqlStatement1, IRISConnect);
+            cmd = new IRISCommand(sqlStatement, con);
+            cmd1 = new IRISCommand(sqlStatement1, con);
+#else
+            String ConnectionString = "Server = postgres" 
+                + "; Port = 5432" + "; Database = demo" 
+                + "; Password = postgres" + "; Username = postgres";
+            NpgsqlConnection con = new NpgsqlConnection();
+            NpgsqlCommand cmd;
+            NpgsqlCommand cmd1;
+            cmd = new NpgsqlCommand(sqlStatement, con);
+            cmd1 = new NpgsqlCommand(sqlStatement1, con);
+#endif
+            con.ConnectionString = ConnectionString;
 
+
+#if CREATETABLE
+            con.Open();
             try
             {
                 cmd.ExecuteNonQuery();
@@ -54,10 +73,14 @@ namespace ConsoleApp
             catch (Exception e) { errstr = e.ToString(); }
             cmd1.ExecuteNonQuery();
 
-            cmd = new IRISCommand(sqlStatement2, IRISConnect);
+#if IRIS
+            cmd = new IRISCommand(sqlStatement2, con);
+#else
+            cmd = new NpgsqlCommand(sqlStatement2, con);
+#endif
             cmd.ExecuteNonQuery();
             cmd.Dispose();
-            IRISConnect.Close();
+            con.Close();
 #endif
             Console.WriteLine("Start writing....");
             int result=0;
@@ -73,9 +96,14 @@ namespace ConsoleApp
 
             Console.WriteLine("");
 
+            con.Open();
+#if IRIS
+            cmd = new IRISCommand(sqlStatement3, con);
             IRISDataReader reader;
-            IRISConnect.Open();
-            cmd = new IRISCommand(sqlStatement3, IRISConnect);
+#else
+            cmd = new NpgsqlCommand(sqlStatement3, con);
+            NpgsqlDataReader reader;
+#endif
             reader = cmd.ExecuteReader();
 
             Console.WriteLine("showing the first line.");
@@ -91,7 +119,8 @@ namespace ConsoleApp
             Console.WriteLine("arraysize:"+arraysize);
             Console.WriteLine("");
 
-            cmd = new IRISCommand(sqlStatement5, IRISConnect);
+#if IRIS
+            cmd = new IRISCommand(sqlStatement5, con);
             reader = cmd.ExecuteReader();
 
             // show global size
@@ -104,12 +133,18 @@ namespace ConsoleApp
             }
             reader.Close();
             Console.WriteLine("");
-            Console.WriteLine("IRIS Server Version:" + IRISConnect.ServerVersion);
+            Console.WriteLine("IRIS Server Version:" + con.ServerVersion);
+#else
+#endif
 
-            IRISCommand cmd4 = new IRISCommand(sqlStatement4, IRISConnect);
-            cmd4.ExecuteNonQuery();
+#if IRIS
+            cmd = new IRISCommand(sqlStatement4, con);
+            cmd.ExecuteNonQuery();
+#else
+            //cmd = new NpgsqlCommand(sqlStatement4, con); no equivalent
+#endif
 
-            IRISConnect.Close();
+            con.Close();
 
             Console.WriteLine(ConnectionString);
         }

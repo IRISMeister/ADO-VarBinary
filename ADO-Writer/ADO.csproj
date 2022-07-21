@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <PackageReference Include="InterSystems.Data.IRISClient" Version="1.0.0" />
+    <PackageReference Include="Npgsql" Version="6.0.5" />
   </ItemGroup>
 
 </Project>
